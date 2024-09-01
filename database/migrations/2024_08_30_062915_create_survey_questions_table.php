@@ -14,7 +14,7 @@ return new class extends Migration
     {
         Schema::create('survey_questions', function (Blueprint $table) {
             $table->id();
-            $table->foreignIdFor(Survey::class,'survey_id');
+            $table->foreignIdFor(Survey::class,'survey_id')->constrained()->onDelete('cascade');
             $table->string('type',64);
             $table->string('question',2048);
             $table->text('description')->nullable();

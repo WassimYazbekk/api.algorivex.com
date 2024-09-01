@@ -7,6 +7,7 @@ use App\Http\Enums\API\V1\QuestionTypeEnum;
 use App\Http\Requests\API\V1\StoreSurveyAnswerRequest;
 use App\Http\Requests\API\V1\StoreSurveyRequest;
 use App\Http\Requests\API\V1\UpdateSurveyRequest;
+use App\Http\Resources\API\V1\AnswersResource;
 use App\Models\API\V1\Survey;
 use App\Models\API\V1\SurveyAnswer;
 use App\Models\API\V1\SurveyQuestion;
@@ -29,8 +30,12 @@ class SurveyController extends Controller
         $user = $request->user();
 
         $query = $request->input('query', '');
+        $status = $request->input('status');
 
-        $results = Survey::query()->where('user_id',$user->id);
+        if($status !== null)
+            $results = Survey::query()->where('user_id',$user->id)->where('status',$status==='public');
+        else
+            $results = Survey::query()->where('user_id',$user->id);
 
         // Apply full-text search if a query is provided
         if (!empty($query)) {
@@ -184,7 +189,7 @@ class SurveyController extends Controller
         return $question->update($validator->validated());
     }
 
-public function storeAnswer(StoreSurveyAnswerRequest $request, Survey $survey)
+    public function storeAnswer(StoreSurveyAnswerRequest $request, Survey $survey)
     {
         $validated = $request->validated();
 
@@ -210,6 +215,22 @@ public function storeAnswer(StoreSurveyAnswerRequest $request, Survey $survey)
         }
 
         return response("", 201);
+    }
+
+    public function answers(Survey $survey, Request $request){
+
+        $user = $request->user();
+
+        if($survey->user_id !== $user->id){
+            return abort(403, 'Unauthorized action.');
+        }
+
+
+        return new AnswersResource($survey);
+
+
+
+
     }
 
 

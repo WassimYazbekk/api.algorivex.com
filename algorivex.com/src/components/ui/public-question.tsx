@@ -14,8 +14,8 @@ import { Textarea } from "./textarea";
 export default function PublicQuestion({ question, index, answerChanged }) {
     let selectedOptions = [];
 
-    function onCheckboxChange(option, $event) {
-        if ($event.target.checked) {
+    function onCheckboxChange(option, v) {
+        if (v) {
             selectedOptions.push(option.text);
         } else {
             selectedOptions = selectedOptions.filter((op) => op != option.text);
@@ -58,7 +58,11 @@ export default function PublicQuestion({ question, index, answerChanged }) {
                     )}
                     {question.type === "radio" && (
                         <div>
-                            <RadioGroup>
+                            <RadioGroup
+                                onValueChange={(v) => {
+                                    answerChanged(v);
+                                }}
+                            >
                                 {question.data.options.map((option) => (
                                     <div
                                         key={option.uuid}
@@ -66,9 +70,6 @@ export default function PublicQuestion({ question, index, answerChanged }) {
                                     >
                                         <RadioGroupItem
                                             id={option.uuid}
-                                            onChange={(ev) =>
-                                                answerChanged(ev.target.value)
-                                            }
                                             value={option.text}
                                         />
                                         <Label htmlFor={option.uuid}>
@@ -88,8 +89,8 @@ export default function PublicQuestion({ question, index, answerChanged }) {
                                 >
                                     <Checkbox
                                         id={option.uuid}
-                                        onChange={(ev) =>
-                                            onCheckboxChange(option, ev)
+                                        onCheckedChange={(v) =>
+                                            onCheckboxChange(option, v)
                                         }
                                     />
                                     <Label

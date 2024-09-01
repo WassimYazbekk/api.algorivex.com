@@ -1,9 +1,20 @@
 import http from "@/axios-client";
 import { Button } from "@/components/ui/button";
 import router from "@/router";
-import { Edit, Link, Plus, Trash } from "lucide-react";
+import { Edit, EyeIcon, Link, Plus, Trash } from "lucide-react";
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+    AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { useEffect, useState } from "react";
-import { useInfiniteQuery } from "@tanstack/react-query";
+import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
 import { useInView } from "react-intersection-observer";
 import {
     Card,
@@ -22,6 +33,13 @@ import {
     SelectValue,
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
+import {
+    Tooltip,
+    TooltipContent,
+    TooltipProvider,
+    TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { useToast } from "@/hooks/use-toast";
 
 export type TSurvey = {
     id: number;
@@ -33,6 +51,30 @@ export type TSurvey = {
 
 const Surveys = () => {
     const [searchQuery, setSearchQuery] = useState("");
+    const [status, setStatus] = useState("");
+    const [copied, setCopied] = useState("");
+    const { toast } = useToast();
+    const queryClient = useQueryClient();
+
+    const handleCopy = (slug) => {
+        navigator.clipboard.writeText(
+            `${import.meta.env.VITE_APP_URL}/survey/public/${slug}`,
+        );
+        setCopied(slug);
+
+        // Hide the popover after 2 seconds
+        setTimeout(() => {
+            setCopied("");
+        }, 2000);
+    };
+
+    async function handleDelete(id) {
+        const response = await http.delete(`survey/${id}`);
+        if (response.status === 204) {
+            toast({ title: "Survey Deleted!", variant: "destructive" });
+            queryClient.invalidateQueries({ queryKey: ["surveys"] });
+        }
+    }
 
     const fetchSurveys = async ({ pageParam }: { pageParam: number }) => {
         try {
@@ -40,6 +82,7 @@ const Surveys = () => {
                 params: {
                     query: searchQuery,
                     page: pageParam,
+                    status: status === "null" ? null : status,
                 },
             });
             const data = res.data;
@@ -50,7 +93,7 @@ const Surveys = () => {
     };
 
     const surveysQuery = useInfiniteQuery({
-        queryKey: ["surveys", searchQuery],
+        queryKey: ["surveys", searchQuery, status],
         queryFn: fetchSurveys,
         initialPageParam: 0,
         getNextPageParam: (lastPage) => {
@@ -83,7 +126,7 @@ const Surveys = () => {
                             type="search"
                         />
                     </div>
-                    <Select>
+                    <Select onValueChange={(v) => setStatus(v)}>
                         <SelectTrigger className="w-64">
                             <SelectValue placeholder="Survey status" />
                         </SelectTrigger>
@@ -92,7 +135,7 @@ const Surveys = () => {
                                 <SelectLabel>Status</SelectLabel>
                                 <SelectItem value="public">Public</SelectItem>
                                 <SelectItem value="private">Private</SelectItem>
-                                <SelectItem value="both">Both</SelectItem>
+                                <SelectItem value="null">Both</SelectItem>
                             </SelectGroup>
                         </SelectContent>
                     </Select>
@@ -116,8 +159,36 @@ const Surveys = () => {
                                 <>
                                     <Card>
                                         <CardHeader>
-                                            <CardTitle>
+                                            <CardTitle className="flex justify-between">
                                                 {survey.title}
+                                                <TooltipProvider>
+                                                    <Tooltip
+                                                        open={
+                                                            copied ===
+                                                            survey.slug
+                                                        }
+                                                    >
+                                                        <TooltipTrigger asChild>
+                                                            <Button
+                                                                variant={
+                                                                    "ghost"
+                                                                }
+                                                                className="relative"
+                                                                onClick={() =>
+                                                                    handleCopy(
+                                                                        survey.slug,
+                                                                    )
+                                                                }
+                                                            >
+                                                                <Link className="mr-2" />
+                                                                Public Link
+                                                            </Button>
+                                                        </TooltipTrigger>
+                                                        <TooltipContent>
+                                                            <h1>Copied</h1>
+                                                        </TooltipContent>
+                                                    </Tooltip>
+                                                </TooltipProvider>
                                             </CardTitle>
                                         </CardHeader>
                                         <CardContent>
@@ -132,11 +203,11 @@ const Surveys = () => {
                                                     variant={"ghost"}
                                                     onClick={() =>
                                                         router.navigate(
-                                                            `/survey/public/${survey.slug}`,
+                                                            `/surveys/${survey.id}/answers`,
                                                         )
                                                     }
                                                 >
-                                                    <Link className="mr-2" />
+                                                    <EyeIcon className="mr-2" />
                                                     View
                                                 </Button>
 
@@ -152,17 +223,49 @@ const Surveys = () => {
                                                     Edit
                                                 </Button>
 
-                                                <Button
-                                                    variant={"ghost"}
-                                                    onClick={() =>
-                                                        router.navigate(
-                                                            `/surveys/${survey.id}`,
-                                                        )
-                                                    }
-                                                >
-                                                    <Trash className="mr-2" />
-                                                    Delete
-                                                </Button>
+                                                <AlertDialog>
+                                                    <AlertDialogTrigger asChild>
+                                                        <Button
+                                                            variant={"ghost"}
+                                                        >
+                                                            <Trash className="mr-2" />
+                                                            Delete
+                                                        </Button>
+                                                    </AlertDialogTrigger>
+                                                    <AlertDialogContent>
+                                                        <AlertDialogHeader>
+                                                            <AlertDialogTitle>
+                                                                Are you
+                                                                absolutely sure?
+                                                            </AlertDialogTitle>
+                                                            <AlertDialogDescription>
+                                                                This action
+                                                                cannot be
+                                                                undone. This
+                                                                will permanently
+                                                                delete your
+                                                                survey and all
+                                                                its corresponing
+                                                                data from our
+                                                                servers.
+                                                            </AlertDialogDescription>
+                                                        </AlertDialogHeader>
+                                                        <AlertDialogFooter>
+                                                            <AlertDialogCancel>
+                                                                Cancel
+                                                            </AlertDialogCancel>
+                                                            <AlertDialogAction
+                                                                onClick={() =>
+                                                                    handleDelete(
+                                                                        survey.id,
+                                                                    )
+                                                                }
+                                                            >
+                                                                Continue
+                                                            </AlertDialogAction>
+                                                        </AlertDialogFooter>
+                                                    </AlertDialogContent>
+                                                </AlertDialog>
                                             </div>
                                         </CardFooter>
                                     </Card>

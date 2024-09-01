@@ -8,6 +8,7 @@ import DefaultLayout from "./layouts/default-layout";
 import CreateSurvey from "./pages/create-survey";
 import UpdateSurvey from "./pages/update-survey";
 import PublicSurvey from "./pages/public-survey";
+import SurveyAnswers from "./pages/survey-answers";
 
 const router = createBrowserRouter([
     {
@@ -33,6 +34,10 @@ const router = createBrowserRouter([
             {
                 path: "/surveys/:id",
                 element: <UpdateSurvey />,
+            },
+            {
+                path: "/surveys/:id/answers",
+                element: <SurveyAnswers />,
             },
         ],
     },

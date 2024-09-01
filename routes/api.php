@@ -21,6 +21,7 @@ Route::group(['prefix'=>'V1'], function(){
         Route::apiResource('survey', SurveyController::class);
 
         Route::get('/dashboard', [DashboardController::class, 'index']);
+        Route::get('/survey/{survey:id}/answers', [SurveyController::class, 'answers']);
     });
 
     Route::get('/survey/public/{survey:slug}', [SurveyController::class, 'getBySlug']);

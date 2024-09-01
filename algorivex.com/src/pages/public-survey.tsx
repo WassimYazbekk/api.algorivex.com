@@ -59,7 +59,7 @@ export default function PublicSurvey() {
                     </div>
 
                     {surveyFinished && (
-                        <div className="py-8 px-6 bg-emerald-500 text-white w-[600px] mx-auto">
+                        <div className="h-full w-full flex items-center justify-center text-2xl">
                             Thank you for participating in the survey
                         </div>
                     )}

@@ -14,7 +14,7 @@ return new class extends Migration
     {
         Schema::create('surveys', function (Blueprint $table) {
             $table->id();
-            $table->foreignIdFor(User::class,'user_id');
+            $table->foreignIdFor(User::class,'user_id')->constrained()->onDelete('cascade');
             $table->string('title',512);
             $table->string('slug',512);
             $table->text('description')->nullable();
