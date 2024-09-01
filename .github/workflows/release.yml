@@ -19,6 +19,7 @@ jobs:
           node-version: "20"
 
       - name: Install dependencies
+        run: cd algorivex.com
         run: npm install
 
       - name: Build project
