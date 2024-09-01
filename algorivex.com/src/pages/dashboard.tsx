@@ -1,6 +1,7 @@
 import http from "@/axios-client";
 import { Button } from "@/components/ui/button";
 import DashboardCard from "@/components/ui/dashboard-card";
+import router from "@/router";
 import { EyeIcon, PencilIcon } from "lucide-react";
 import { useEffect, useState } from "react";
 
@@ -81,14 +82,23 @@ export default function Dashboard() {
                                 </div>
                                 <div className="flex justify-between">
                                     <Button
-                                        to={`/surveys/${data.latestSurvey.id}`}
-                                        link
+                                        onClick={() =>
+                                            router.navigate(
+                                                `/surveys/${data.latestSurvey.id}`,
+                                            )
+                                        }
                                     >
                                         <PencilIcon className="w-5 h-5 mr-2" />
                                         Edit Survey
                                     </Button>
 
-                                    <Button link>
+                                    <Button
+                                        onClick={() =>
+                                            router.navigate(
+                                                `/surveys/${data.latestSurvey.id}/answers`,
+                                            )
+                                        }
+                                    >
                                         <EyeIcon className="w-5 h-5 mr-2" />
                                         View Answers
                                     </Button>

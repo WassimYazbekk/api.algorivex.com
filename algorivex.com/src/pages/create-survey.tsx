@@ -26,9 +26,9 @@ import { Calendar } from "@/components/ui/calendar";
 import { format } from "date-fns";
 import { Switch } from "@/components/ui/switch";
 import { useState } from "react";
-import { v4 as uuid } from "uuid";
 import SurveyQuestions from "@/components/ui/survey-questions";
 import router from "@/router";
+import { useQueryClient } from "@tanstack/react-query";
 
 const formSchema = z.object({
     title: z.string(),
@@ -39,6 +39,7 @@ const formSchema = z.object({
 
 const CreateSurvey = () => {
     const [questions, setQuestions] = useState([]);
+    const queryClient = useQueryClient();
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
         defaultValues: {
@@ -53,20 +54,6 @@ const CreateSurvey = () => {
         setQuestions(questions);
     }
 
-    const addQuestion = () => {
-        setQuestions((prev) => {
-            const temp = prev;
-            temp.push({
-                id: uuid(),
-                type: "text",
-                question: "",
-                description: "",
-                data: {},
-            });
-            return temp;
-        });
-    };
-
     async function onSubmit(values: z.infer<typeof formSchema>) {
         const data = {
             ...values,
@@ -78,6 +65,7 @@ const CreateSurvey = () => {
 
         const response = await http.post("survey", data);
         if (response.status === 201) {
+            queryClient.invalidateQueries({ queryKey: ["surveys"] });
             router.navigate("/surveys");
         }
     }
