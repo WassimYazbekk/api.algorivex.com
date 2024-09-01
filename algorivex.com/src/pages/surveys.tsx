@@ -2,12 +2,12 @@ import http from "@/axios-client";
 import { Button } from "@/components/ui/button";
 import router from "@/router";
 import { Edit, Link, Plus, Trash } from "lucide-react";
-import { useState } from "react";
-import { keepPreviousData, useQuery } from "@tanstack/react-query";
+import { useEffect, useState } from "react";
+import { useInfiniteQuery } from "@tanstack/react-query";
+import { useInView } from "react-intersection-observer";
 import {
     Card,
     CardContent,
-    CardDescription,
     CardFooter,
     CardHeader,
     CardTitle,
@@ -32,15 +32,14 @@ export type TSurvey = {
 };
 
 const Surveys = () => {
-    const [page, setPage] = useState(1);
     const [searchQuery, setSearchQuery] = useState("");
 
-    const fetchSurveys = async (page: number = 1, query: string = "") => {
+    const fetchSurveys = async ({ pageParam }: { pageParam: number }) => {
         try {
             const res = await http.get("survey", {
                 params: {
-                    page: page,
-                    query: query,
+                    query: searchQuery,
+                    page: pageParam,
                 },
             });
             const data = res.data;
@@ -50,11 +49,23 @@ const Surveys = () => {
         }
     };
 
-    const surveysQuery = useQuery({
-        queryKey: ["surveys", page, searchQuery],
-        queryFn: () => fetchSurveys(page, searchQuery),
-        placeholderData: keepPreviousData,
+    const surveysQuery = useInfiniteQuery({
+        queryKey: ["surveys", searchQuery],
+        queryFn: fetchSurveys,
+        initialPageParam: 0,
+        getNextPageParam: (lastPage) => {
+            return lastPage.current_page + 1 <= lastPage.last_page
+                ? lastPage.current_page + 1
+                : null;
+        },
     });
+    const { ref, inView } = useInView();
+
+    useEffect(() => {
+        if (inView) {
+            surveysQuery.fetchNextPage();
+        }
+    }, [surveysQuery.fetchNextPage, inView]);
 
     return (
         <div>
@@ -99,60 +110,70 @@ const Surveys = () => {
                 {surveysQuery.isLoading || surveysQuery.isError ? (
                     <span className="text-2xl">Loading...</span>
                 ) : (
-                    surveysQuery.data.data.map((survey: TSurvey) => {
-                        return (
-                            <Card>
-                                <CardHeader>
-                                    <CardTitle>{survey.title}</CardTitle>
-                                    <CardDescription>
-                                        @{survey.title}
-                                    </CardDescription>
-                                </CardHeader>
-                                <CardContent>{survey.description}</CardContent>
-                                <CardFooter className="flex justify-between">
-                                    {survey.status ? "public" : "private"}
-                                    <div className="flex gap-2">
-                                        <Button
-                                            variant={"ghost"}
-                                            onClick={() =>
-                                                router.navigate(
-                                                    `/survey/public/${survey.slug}`,
-                                                )
-                                            }
-                                        >
-                                            <Link className="mr-2" />
-                                            View
-                                        </Button>
+                    surveysQuery.data?.pages.map((page) => {
+                        return page.data.map((survey: TSurvey) => {
+                            return (
+                                <>
+                                    <Card>
+                                        <CardHeader>
+                                            <CardTitle>
+                                                {survey.title}
+                                            </CardTitle>
+                                        </CardHeader>
+                                        <CardContent>
+                                            {survey.description}
+                                        </CardContent>
+                                        <CardFooter className="flex justify-between">
+                                            {survey.status
+                                                ? "public"
+                                                : "private"}
+                                            <div className="flex gap-2">
+                                                <Button
+                                                    variant={"ghost"}
+                                                    onClick={() =>
+                                                        router.navigate(
+                                                            `/survey/public/${survey.slug}`,
+                                                        )
+                                                    }
+                                                >
+                                                    <Link className="mr-2" />
+                                                    View
+                                                </Button>
 
-                                        <Button
-                                            variant={"ghost"}
-                                            onClick={() =>
-                                                router.navigate(
-                                                    `/surveys/${survey.id}`,
-                                                )
-                                            }
-                                        >
-                                            <Edit className="mr-2" />
-                                            Edit
-                                        </Button>
+                                                <Button
+                                                    variant={"ghost"}
+                                                    onClick={() =>
+                                                        router.navigate(
+                                                            `/surveys/${survey.id}`,
+                                                        )
+                                                    }
+                                                >
+                                                    <Edit className="mr-2" />
+                                                    Edit
+                                                </Button>
 
-                                        <Button
-                                            variant={"ghost"}
-                                            onClick={() =>
-                                                router.navigate(
-                                                    `/surveys/${survey.id}`,
-                                                )
-                                            }
-                                        >
-                                            <Trash className="mr-2" />
-                                            Delete
-                                        </Button>
-                                    </div>
-                                </CardFooter>
-                            </Card>
-                        );
+                                                <Button
+                                                    variant={"ghost"}
+                                                    onClick={() =>
+                                                        router.navigate(
+                                                            `/surveys/${survey.id}`,
+                                                        )
+                                                    }
+                                                >
+                                                    <Trash className="mr-2" />
+                                                    Delete
+                                                </Button>
+                                            </div>
+                                        </CardFooter>
+                                    </Card>
+                                </>
+                            );
+                        });
                     })
                 )}
+                <div ref={ref}>
+                    {surveysQuery.isFetchingNextPage && "Loading..."}
+                </div>
             </div>
         </div>
     );

@@ -67,8 +67,8 @@ export default function Dashboard() {
                                     <div>Status:</div>
                                     <div>
                                         {data.latestSurvey.status
-                                            ? "Active"
-                                            : "Draft"}
+                                            ? "Public"
+                                            : "Private"}
                                     </div>
                                 </div>
                                 <div className="flex justify-between text-sm mb-1">
