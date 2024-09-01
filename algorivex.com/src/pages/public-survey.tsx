@@ -3,6 +3,7 @@ import { useParams } from "react-router-dom";
 import http from "@/axios-client";
 import PublicQuestion from "@/components/ui/public-question";
 import { Button } from "@/components/ui/button";
+import { TailSpin } from "react-loader-spinner";
 
 export default function PublicSurvey() {
     const answers = {};
@@ -42,7 +43,20 @@ export default function PublicSurvey() {
 
     return (
         <div>
-            {loading && <div className="flex justify-center">Loading..</div>}
+            {loading && (
+                <div className="flex min-h-screen w-full justify-center items-center">
+                    <TailSpin
+                        visible={true}
+                        height="80"
+                        width="80"
+                        ariaLabel="tail-spin-loading"
+                        color="#FFF"
+                        radius="1"
+                        wrapperStyle={{}}
+                        wrapperClass=""
+                    />
+                </div>
+            )}
             {!loading && (
                 <form
                     onSubmit={(e) => onSubmit(e)}

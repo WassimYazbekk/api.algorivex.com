@@ -7,6 +7,7 @@ import {
     CardTitle,
 } from "@/components/ui/card";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
+import { TailSpin } from "react-loader-spinner";
 import { useParams } from "react-router-dom";
 
 export default function SurveyAnswers() {
@@ -28,7 +29,18 @@ export default function SurveyAnswers() {
     return (
         <div>
             {surveyQuery.isLoading || surveyQuery.isError ? (
-                <h1>loading...</h1>
+                <div className="flex min-h-screen w-full justify-center items-center">
+                    <TailSpin
+                        visible={true}
+                        height="80"
+                        width="80"
+                        ariaLabel="tail-spin-loading"
+                        color="#FFF"
+                        radius="1"
+                        wrapperStyle={{}}
+                        wrapperClass=""
+                    />
+                </div>
             ) : (
                 <div className="p-2">
                     {surveyQuery.data.data.questions?.map((question) => {

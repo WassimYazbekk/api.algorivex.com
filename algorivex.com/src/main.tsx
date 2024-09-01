@@ -8,7 +8,7 @@ import { AuthContextProvider } from "./contexts/auth-context";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "./components/ui/toaster";
 
-const client = new QueryClient();
+export const client = new QueryClient();
 createRoot(document.getElementById("root")!).render(
     <StrictMode>
         <ThemeProvider defaultTheme="system" storageKey="vite-ui-theme">

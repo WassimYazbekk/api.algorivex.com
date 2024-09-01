@@ -40,6 +40,7 @@ import {
     TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { useToast } from "@/hooks/use-toast";
+import { TailSpin } from "react-loader-spinner";
 
 export type TSurvey = {
     id: number;
@@ -151,7 +152,18 @@ const Surveys = () => {
             </div>
             <div className="flex flex-col max-h-full w-full p-2 gap-2">
                 {surveysQuery.isLoading || surveysQuery.isError ? (
-                    <span className="text-2xl">Loading...</span>
+                    <div className="flex min-h-screen w-full justify-center items-center">
+                        <TailSpin
+                            visible={true}
+                            height="80"
+                            width="80"
+                            ariaLabel="tail-spin-loading"
+                            color="#FFF"
+                            radius="1"
+                            wrapperStyle={{}}
+                            wrapperClass=""
+                        />
+                    </div>
                 ) : (
                     surveysQuery.data?.pages.map((page) => {
                         return page.data.map((survey: TSurvey) => {
@@ -275,7 +287,20 @@ const Surveys = () => {
                     })
                 )}
                 <div ref={ref}>
-                    {surveysQuery.isFetchingNextPage && "Loading..."}
+                    {surveysQuery.isFetchingNextPage && (
+                        <div className="flex  w-full justify-center items-center">
+                            <TailSpin
+                                visible={true}
+                                height="80"
+                                width="80"
+                                ariaLabel="tail-spin-loading"
+                                color="#FFF"
+                                radius="1"
+                                wrapperStyle={{}}
+                                wrapperClass=""
+                            />
+                        </div>
+                    )}
                 </div>
             </div>
         </div>

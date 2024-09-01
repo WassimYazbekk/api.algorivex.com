@@ -30,6 +30,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { CalendarIcon } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
+import { TailSpin } from "react-loader-spinner";
 
 const formSchema = z.object({
     title: z.string(),
@@ -100,7 +101,18 @@ export default function UpdateSurvey() {
     return (
         <div className="flex w-full h-full items-center justify-center p-2">
             {surveyQuery.isLoading || surveyQuery.isError ? (
-                <h1>Loading...</h1>
+                <div className="flex min-h-screen w-full justify-center items-center">
+                    <TailSpin
+                        visible={true}
+                        height="80"
+                        width="80"
+                        ariaLabel="tail-spin-loading"
+                        color="#FFF"
+                        radius="1"
+                        wrapperStyle={{}}
+                        wrapperClass=""
+                    />
+                </div>
             ) : (
                 <Card className="max-w-lg w-full self-center">
                     <CardHeader className="items-center">

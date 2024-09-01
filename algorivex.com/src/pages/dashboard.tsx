@@ -2,31 +2,40 @@ import http from "@/axios-client";
 import { Button } from "@/components/ui/button";
 import DashboardCard from "@/components/ui/dashboard-card";
 import router from "@/router";
+import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { EyeIcon, PencilIcon } from "lucide-react";
-import { useEffect, useState } from "react";
+import { TailSpin } from "react-loader-spinner";
 
 export default function Dashboard() {
-    const [loading, setLoading] = useState(true);
-    const [data, setData] = useState({});
+    async function fetchData() {
+        const response = await http.get(`dashboard`);
+        const data = await response.data;
+        return data;
+    }
 
-    useEffect(() => {
-        setLoading(true);
-        http.get(`dashboard`)
-            .then((res) => {
-                setLoading(false);
-                setData(res.data);
-                return res;
-            })
-            .catch((error) => {
-                setLoading(false);
-                return error;
-            });
-    }, []);
+    const dashboardQuery = useQuery({
+        queryKey: ["dashboard"],
+        queryFn: fetchData,
+        placeholderData: keepPreviousData,
+    });
 
     return (
         <div className="p-2">
-            {loading && <div className="flex justify-center">Loading...</div>}
-            {!loading && (
+            {(dashboardQuery.isError || dashboardQuery.isLoading) && (
+                <div className="flex min-h-screen w-full justify-center items-center">
+                    <TailSpin
+                        visible={true}
+                        height="80"
+                        width="80"
+                        ariaLabel="tail-spin-loading"
+                        color="#FFF"
+                        radius="1"
+                        wrapperStyle={{}}
+                        wrapperClass=""
+                    />
+                </div>
+            )}
+            {!(dashboardQuery.isLoading || dashboardQuery.isError) && (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 text-gray-700">
                     <DashboardCard
                         title="Total Surveys"
@@ -34,7 +43,7 @@ export default function Dashboard() {
                         style={{ animationDelay: "0.1s" }}
                     >
                         <div className="text-8xl pb-4 font-semibold flex-1 flex items-center justify-center">
-                            {data.totalSurveys}
+                            {dashboardQuery.data.totalSurveys}
                         </div>
                     </DashboardCard>
                     <DashboardCard
@@ -43,7 +52,7 @@ export default function Dashboard() {
                         style={{ animationDelay: "0.2s" }}
                     >
                         <div className="text-8xl pb-4 font-semibold flex-1 flex items-center justify-center">
-                            {data.totalAnswers}
+                            {dashboardQuery.data.totalAnswers}
                         </div>
                     </DashboardCard>
                     <DashboardCard
@@ -51,40 +60,60 @@ export default function Dashboard() {
                         className="order-3 lg:order-1 row-span-2"
                         style={{ animationDelay: "0.2s" }}
                     >
-                        {data.latestSurvey && (
+                        {dashboardQuery.data.latestSurvey && (
                             <div>
                                 <h3 className="font-bold text-xl mb-3">
-                                    {data.latestSurvey.title}
+                                    {dashboardQuery.data.latestSurvey.title}
                                 </h3>
                                 <div className="flex justify-between text-sm mb-1">
                                     <div>Create Date:</div>
-                                    <div>{data.latestSurvey.created_at}</div>
+                                    <div>
+                                        {
+                                            dashboardQuery.data.latestSurvey
+                                                .created_at
+                                        }
+                                    </div>
                                 </div>
                                 <div className="flex justify-between text-sm mb-1">
                                     <div>Expire Date:</div>
-                                    <div>{data.latestSurvey.expire_date}</div>
+                                    <div>
+                                        {
+                                            dashboardQuery.data.latestSurvey
+                                                .expire_date
+                                        }
+                                    </div>
                                 </div>
                                 <div className="flex justify-between text-sm mb-1">
                                     <div>Status:</div>
                                     <div>
-                                        {data.latestSurvey.status
+                                        {dashboardQuery.data.latestSurvey.status
                                             ? "Public"
                                             : "Private"}
                                     </div>
                                 </div>
                                 <div className="flex justify-between text-sm mb-1">
                                     <div>Questions:</div>
-                                    <div>{data.latestSurvey.questions}</div>
+                                    <div>
+                                        {
+                                            dashboardQuery.data.latestSurvey
+                                                .questions
+                                        }
+                                    </div>
                                 </div>
                                 <div className="flex justify-between text-sm mb-3">
                                     <div>Answers:</div>
-                                    <div>{data.latestSurvey.answers}</div>
+                                    <div>
+                                        {
+                                            dashboardQuery.data.latestSurvey
+                                                .answers
+                                        }
+                                    </div>
                                 </div>
                                 <div className="flex justify-between">
                                     <Button
                                         onClick={() =>
                                             router.navigate(
-                                                `/surveys/${data.latestSurvey.id}`,
+                                                `/surveys/${dashboardQuery.data.latestSurvey.id}`,
                                             )
                                         }
                                     >
@@ -95,7 +124,7 @@ export default function Dashboard() {
                                     <Button
                                         onClick={() =>
                                             router.navigate(
-                                                `/surveys/${data.latestSurvey.id}/answers`,
+                                                `/surveys/${dashboardQuery.data.latestSurvey.id}/answers`,
                                             )
                                         }
                                     >
@@ -105,7 +134,7 @@ export default function Dashboard() {
                                 </div>
                             </div>
                         )}
-                        {!data.latestSurvey && (
+                        {!dashboardQuery.data.latestSurvey && (
                             <div className="text-gray-600 text-center py-16">
                                 Your don't have surveys yet
                             </div>
@@ -116,28 +145,30 @@ export default function Dashboard() {
                         className="order-4 lg:order-3 row-span-2"
                         style={{ animationDelay: "0.3s" }}
                     >
-                        {data.latestAnswers.length && (
+                        {dashboardQuery.data.latestAnswers.length && (
                             <div className="text-left">
-                                {data.latestAnswers.map((answer) => (
-                                    <a
-                                        href="#"
-                                        key={answer.id}
-                                        className="block p-2 hover:bg-gray-100/90"
-                                    >
-                                        <div className="font-semibold">
-                                            {answer.survey.title}
-                                        </div>
-                                        <small>
-                                            Answer Made at:
-                                            <i className="font-semibold">
-                                                {answer.end_date}
-                                            </i>
-                                        </small>
-                                    </a>
-                                ))}
+                                {dashboardQuery.data.latestAnswers.map(
+                                    (answer) => (
+                                        <a
+                                            href="#"
+                                            key={answer.id}
+                                            className="block p-2 hover:bg-gray-100/90"
+                                        >
+                                            <div className="font-semibold">
+                                                {answer.survey.title}
+                                            </div>
+                                            <small>
+                                                Answer Made at:
+                                                <i className="font-semibold">
+                                                    {answer.end_date}
+                                                </i>
+                                            </small>
+                                        </a>
+                                    ),
+                                )}
                             </div>
                         )}
-                        {!data.latestAnswers.length && (
+                        {!dashboardQuery.data.latestAnswers.length && (
                             <div className="text-gray-600 text-center py-16">
                                 Your don't have answers yet
                             </div>
